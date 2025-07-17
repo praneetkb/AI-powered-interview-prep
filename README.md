@@ -3,6 +3,9 @@
 View the full working demo code here!:
 [Demo](https://github.com/eunsongkoh/wics-fullstack-workshop)
 
+Slides: 
+[WiCS Summer 2025 Workshop.pdf](https://github.com/user-attachments/files/21288302/WiCS.Summer.2025.Workshop.pdf)
+
 ## 🛠️ Tech Stack
 
 - **[Next.js 15](https://nextjs.org/)** - React framework for production
