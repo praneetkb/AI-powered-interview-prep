@@ -39,8 +39,11 @@ export default function Dashboard() {
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
   const [interviewData, setInterviewData] = useState<Interview[]>([]);
 
-  // TODO:
-  // - Implement a function to fetch all the interview data from the database on load
+  /**
+   * TODO:
+   * Fetch interview data when the component mounts or userId changes.
+   * If userId is not available, it exits early.
+   */
   useEffect(() => {}, []);
 
   const handleResumeSubmit = () => {

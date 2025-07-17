@@ -38,7 +38,6 @@ export function InterviewForm({
   // - Validate user is logged in
   // - Create a new interview object with form submission details
   // - Update the interviews in the database
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   };

@@ -18,5 +18,17 @@ import { auth } from "./firebaseConfig";
 
 // TODO:
 // - Implement a function to subscribe to authentication state changes
+
+export function onAuthStateChanged(callback: (authUser: User | null) => void) {
+  return
+}
+
 // - Implement a function to sign in a user using Google authentication
+export async function signInWithGoogle() {
+  return;
+}
+
 // - Implement a function to sign out the currently authenticated user
+export async function signOutWithGoogle() {
+  return;
+}

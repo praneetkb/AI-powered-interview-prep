@@ -1,5 +1,7 @@
 # 🚀 WICS Fullstack Workshop Starter (Next.js + Firebase)
 
+View the full working demo code here!:
+[Demo](https://github.com/eunsongkoh/wics-fullstack-workshop)
 
 ## 🛠️ Tech Stack
 

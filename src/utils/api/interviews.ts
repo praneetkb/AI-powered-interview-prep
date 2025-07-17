@@ -14,5 +14,19 @@ import { db } from "@/lib/firebase/firebaseConfig";
 
 // TODO:
 // - Implement a function to create a new interview for a user
+export async function createInterview(
+  userId: string,
+  interview_info: BaseInterview
+) {
+  return;
+}
+
 // - Implement a function to retrieve all interviews for a user
+export async function getInterviews(userId: string): Promise<Interview[]> {
+  return;
+}
+
 // - Implement a function to retrieve a specific interview by its ID
+export async function getInterviewById(userId: string, interviewId: string) {
+  return;
+}
