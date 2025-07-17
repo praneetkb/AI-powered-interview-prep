@@ -20,6 +20,23 @@ interface ResumeFormProps {
   userId?: string;
 }
 
+/**
+ * A form component for creating and updating a user's resume.
+ *
+ * @param {Object} props - The properties for the component.
+ * @param {Function} props.onSubmit - Callback function to handle form submission with the updated resume data.
+ * @param {Function} props.onCancel - Callback function to handle cancellation of the form.
+ * @param {string} props.userId - The ID of the user whose resume is being edited.
+ *
+ * @returns {JSX.Element} The rendered form component.
+ *
+ * @example
+ * <ResumeForm
+ *   onSubmit={(data) => console.log(data)}
+ *   onCancel={() => console.log('Cancelled')}
+ *   userId="12345"
+ * />
+ */
 export function ResumeForm({ onSubmit, onCancel, userId }: ResumeFormProps) {
   const [projects, setProjects] = useState("");
   const [skills, setSkills] = useState("");

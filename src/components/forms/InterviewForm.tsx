@@ -13,6 +13,16 @@ interface InterviewFormProps {
   userId?: string;
 }
 
+/**
+ * InterviewForm component for creating a new interview entry.
+ *
+ * @param {Object} props - The component props.
+ * @param {Function} props.onSubmit - Callback function to be called on successful form submission.
+ * @param {Function} props.onCancel - Callback function to be called when the cancel button is clicked.
+ * @param {string} props.userId - The ID of the user creating the interview.
+ *
+ * @returns {JSX.Element} The rendered InterviewForm component.
+ */
 export function InterviewForm({
   onSubmit,
   onCancel,
@@ -23,10 +33,10 @@ export function InterviewForm({
   const [company, setCompany] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // TODO: 
-  // Implement a function to handle form submission: 
-  // - Validate user is logged in 
-  // - Create a new interview object with form submission details 
+  // TODO:
+  // Implement a function to handle form submission:
+  // - Validate user is logged in
+  // - Create a new interview object with form submission details
   // - Update the interviews in the database
 
   const handleSubmit = async (e: React.FormEvent) => {

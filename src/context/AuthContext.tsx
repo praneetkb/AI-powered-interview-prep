@@ -26,6 +26,18 @@ export const useAuth = () => {
   return context;
 };
 
+/**
+ * AuthProvider component that provides authentication context to its children.
+ *
+ * This component manages the authentication state of the user, including
+ * signing in and signing out. It uses Firebase authentication methods
+ * to handle user sessions and provides the current user and loading state
+ * through the context.
+ *
+ * @param {React.ReactNode} children - The child components that will have access to the authentication context.
+ *
+ * @returns {JSX.Element} The AuthContext.Provider component with the authentication value.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
@@ -48,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error signing out:", errorMessage);
-      throw error; 
+      throw error;
     }
   };
 

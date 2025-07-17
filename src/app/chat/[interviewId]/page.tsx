@@ -5,14 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { buildPrompt } from "@/lib/prompt";
-import { Message } from "@/models/chat";
 import { Interview } from "@/models/interview";
-import { genaiService } from "@/utils/api/genai";
+import { Resume } from "@/models/resume";
 import { getInterviewById } from "@/utils/api/interviews";
+import { getResumeDetails } from "@/utils/api/resume";
+import { useChat } from "@ai-sdk/react";
 import { Bot, Loader2, MessageSquare, Send, User } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+/**
+ * Chat component for conducting interview preparation chats.
+ *
+ * This component fetches interview and resume data based on the user's ID and the interview ID
+ * provided in the parameters. It utilizes a chat interface to allow users to interact with an AI
+ * assistant that generates personalized interview questions and provides guidance.
+ *
+ * @param params - A promise that resolves to an object containing the interviewId.
+ * @returns A JSX element representing the chat interface.
+ */
 export default function Chat({
   params,
 }: {
@@ -21,96 +32,47 @@ export default function Chat({
   const { user } = useAuth();
   const userId = user?.uid;
   const { interviewId } = use(params);
-
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content:
-        "Hi! I'm your AI interview preparation assistant. I can help you generate personalized interview questions based on your resume and job descriptions. How would you like to start?",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
-
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [interviewData, setInterviewData] = useState<Interview>();
+  const [, setResumeData] = useState<Resume>();
+  const [systemPrompt, setSystemPrompt] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
         return;
       }
-
       try {
-        const data = await getInterviewById(userId, interviewId);
-        setInterviewData(data);
+        const interviewData = await getInterviewById(userId, interviewId);
+        const resumeData = await getResumeDetails(userId);
+
+        setInterviewData(interviewData);
+        setResumeData(resumeData);
+
+        // Build the system prompt when interview data is loaded
+        if (interviewData && resumeData) {
+          const prompt = buildPrompt(interviewData, resumeData);
+          setSystemPrompt(prompt);
+        }
       } catch (error) {
         console.error("Error fetching interview data:", error);
         toast.error("Failed to load interview data.");
       }
     };
-
     fetchData();
   }, [interviewId, userId]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({
+      api: "/api/chat",
+      body: {
+        systemPrompt: systemPrompt,
+      },
+    });
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
-      isUser: true,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = inputValue;
-    setInputValue("");
-    setIsLoading(true);
-
-    try {
-      if (!interviewData) {
-        throw new Error("Interview data not found");
-      }
-
-      // Append past messages as history to the prompt
-      const systemPrompt = buildPrompt(interviewData, messages);
-
-      const aiResponseText = await genaiService.sendMessageWithPrompt(
-        currentInput,
-        systemPrompt
-      );
-
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponseText,
-        isUser: false,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
-      console.error("Error getting AI response:", error);
-
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content:
-          "Sorry, I'm having trouble processing your request right now. Please try again.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const onSubmit = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    if (input.trim()) {
+      handleSubmit();
     }
   };
 
@@ -140,8 +102,19 @@ export default function Chat({
                 </div>
                 <p className="text-sm">
                   I can help you prepare for interviews by generating
-                  personalized questions.
+                  personalized questions based on your profile.
                 </p>
+                {interviewData && (
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                      Interview Details:
+                    </p>
+                    <p className="text-sm">{interviewData.job_title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {interviewData.company}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -159,14 +132,28 @@ export default function Chat({
               {/* Scrollable Messages Container */}
               <CardContent className="flex-1">
                 <div className="h-96 overflow-y-auto p-6 space-y-6">
+                  {messages.length === 0 && (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <div className="text-center">
+                        <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-sm">
+                          Start a conversation to get personalized interview
+                          questions
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {messages.map((message) => (
                     <div
                       key={message.id}
                       className={`flex gap-3 ${
-                        message.isUser ? "justify-end" : "justify-start"
+                        message.role === "user"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
-                      {!message.isUser && (
+                      {message.role !== "user" && (
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                           <Bot className="h-4 w-4 text-primary" />
                         </div>
@@ -174,34 +161,44 @@ export default function Chat({
 
                       <div
                         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                          message.isUser
+                          message.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.content}
-                        </p>
-                        <p
-                          className={`text-xs mt-2 ${
-                            message.isUser
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {message.timestamp
-                            .getHours()
-                            .toString()
-                            .padStart(2, "0")}
-                          :
-                          {message.timestamp
-                            .getMinutes()
-                            .toString()
-                            .padStart(2, "0")}
-                        </p>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {/* Handle different message content formats */}
+                          {message.content &&
+                          typeof message.content === "string"
+                            ? message.content
+                            : message.parts?.map((part, index) =>
+                                part.type === "text" ? (
+                                  <span key={index}>{part.text}</span>
+                                ) : null
+                              )}
+                        </div>
+                        {message.createdAt && (
+                          <p
+                            className={`text-xs mt-2 ${
+                              message.role === "user"
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {new Date(message.createdAt)
+                              .getHours()
+                              .toString()
+                              .padStart(2, "0")}
+                            :
+                            {new Date(message.createdAt)
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0")}
+                          </p>
+                        )}
                       </div>
 
-                      {message.isUser && (
+                      {message.role === "user" && (
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                           <User className="h-4 w-4 text-muted-foreground" />
                         </div>
@@ -232,16 +229,25 @@ export default function Chat({
               <div className="p-6 border-t">
                 <div className="flex gap-3">
                   <Input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    name="prompt"
+                    value={input}
+                    type="text"
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        onSubmit(e);
+                      }
+                    }}
                     placeholder="Ask for interview questions, preparation tips, or specific guidance..."
-                    onKeyDown={handleKeyPress}
                     className="flex-1"
                     disabled={isLoading}
                   />
+
                   <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isLoading}
+                    type="submit"
+                    onClick={onSubmit}
+                    disabled={!input.trim() || isLoading}
                     className="shadow-medium"
                   >
                     {isLoading ? (
@@ -253,7 +259,7 @@ export default function Chat({
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Press Enter to send • AI responses are generated based on your
-                  resume and job preferences
+                  interview profile and preferences
                 </p>
               </div>
             </Card>

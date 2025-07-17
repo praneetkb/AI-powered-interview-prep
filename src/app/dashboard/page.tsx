@@ -25,6 +25,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+/**
+ * Dashboard component that displays user interview preparation progress and allows
+ * users to manage their applications.
+ *
+ * @returns {JSX.Element} The rendered Dashboard component.
+ */
 export default function Dashboard() {
   const { user } = useAuth();
   const userId = user?.uid;
@@ -33,11 +39,9 @@ export default function Dashboard() {
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
   const [interviewData, setInterviewData] = useState<Interview[]>([]);
 
-  // TODO: 
-  // - Implement a function to fetch all the interview data from the database on load 
-  useEffect(() => {
-  
-  }, []);
+  // TODO:
+  // - Implement a function to fetch all the interview data from the database on load
+  useEffect(() => {}, []);
 
   const handleResumeSubmit = () => {
     toast("Resume uploaded successfully!", {
