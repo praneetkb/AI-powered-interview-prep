@@ -40,6 +40,38 @@ export function InterviewForm({
   // - Update the interviews in the database
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if(!userId){
+      toast.error("User ID is required to create an interview");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const interview_info: BaseInterview = {
+        job_title: jobTitle,
+        job_description: jobDescription,
+        company: company,
+        created_at: {
+          date: new Date(),
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        }
+      };
+
+      await createInterview(userId, interview_info);
+      onSubmit();
+
+      toast.success("Interview created successfully!");
+    } catch (error) {
+      console.error("Error creating interview:", error)
+      toast.error("Failed to create interview. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

@@ -19,14 +19,38 @@ export async function updateResumeExperience(
   resumeId: string,
   experience: ResumeExperience[]
 ): Promise<void> {
-  return;
+  const resumeRef = doc(db, "users", userId, "resume", resumeId);
+  try {
+    await setDoc(resumeRef, { experience: experience }, { merge: true });
+  } catch (error) {
+    console.error("Error updating experience section:", error);
+    throw error;
+  }
 }
 
 // - Implement a function to retrieve user's complete resume
 
 export async function getResumeDetails(userId: string): Promise<Resume> { 
-    return 
-}
+    const resumeRef = collection(db, "users", userId, "resume");
+    const resumeSnapshot = await getDocs(resumeRef);
+
+    const resume: Resume = {
+      id: userId,
+      experience: [],
+      other: "",
+      projects: "",
+      skills: '',
+    };
+
+    resumeSnapshot.docs.forEach((doc) => {
+      resume.experience = doc.get("experience") || [];
+      resume.other = doc.get("other") || "";
+      resume.projects = doc.get("projects") || "";
+      resume.skills = doc.get("skills") || "";
+    });
+  
+    return resume;
+  }
 
 // - Implement a function to update specific sections of the resume
 export async function updateResumeSection(
@@ -35,5 +59,10 @@ export async function updateResumeSection(
   section: "other" | "projects" | "skills",
   content: string
 ): Promise<void> {
-    return 
+  try {
+    const sectionRef = doc(db, "users", userId, "resume", resumeId);
+    await setDoc(sectionRef, { [section]: content }, { merge: true });
+  } catch (error) {
+    console.error(`Error updating ${section} section:`, error);
+  }
 }
